@@ -18,7 +18,7 @@ public class FileElement implements Comparable<FileElement> {
     }
 
     public String getKey() {
-        return name + String.valueOf(size);
+        return name + size;
     }
 
     public void addDoubles() {
@@ -37,12 +37,16 @@ public class FileElement implements Comparable<FileElement> {
         this.paths.add(path);
     }
 
-    public String getPaths() {
-        String rez = "";
+    public String getPathsString() {
+        StringBuilder rez = new StringBuilder();
         for (Path path:paths             ) {
-            rez += "      "+path.toString() +'\n';
+            rez.append("      ").append(path.toString()).append('\n');
         }
-        return rez ;
+        return rez.toString();
+    }
+
+    public List<Path> getPaths() {
+        return paths;
     }
 
     public int getDoubles() {

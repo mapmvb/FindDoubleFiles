@@ -5,12 +5,15 @@ import java.nio.file.*;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import static java.nio.file.FileVisitResult.*;
 
 public class MyFileVisitor extends SimpleFileVisitor<Path> {
     TreeMap<String, FileElement> files = new TreeMap<>();
+    Map<String, Long> dirs = new HashMap<>();
 
     @Override
     public FileVisitResult visitFile(Path file,
@@ -50,6 +53,7 @@ public class MyFileVisitor extends SimpleFileVisitor<Path> {
     public void printAll() {
         final long[] saves = {0};
 //        files.forEach((K,V)-> System.out.println(K.toString()+"->"+V.toString()));
+        String savedBytes = "";
         files.values().stream()
                 .filter(p->p.getDoubles()>1)
                 .sorted()
@@ -57,11 +61,40 @@ public class MyFileVisitor extends SimpleFileVisitor<Path> {
 //                        .thenComparing(Comparator.comparing(FileElement::getSize).reversed())
 //                        .thenComparing(Comparator.comparing(FileElement::getName).reversed()))
                 .forEach((p) -> {
-                    System.out.println(p.getDoubles() + " " + p.getSize() + " " + p.getName());
-                    System.out.print(p.getPaths());
+                    String s = String.format("%,d",p.getSize());
+                    System.out.println(p.getDoubles() + " " + s + " " + p.getName());
+                    System.out.print(p.getPathsString());
                     saves[0] += p.getSize()*(p.getDoubles()-1);
                 });
-        System.out.println("Будет освобождено:"+saves[0]+"bytes");
+        savedBytes = String.format("%,d",saves[0]);
+        System.out.println("Будет освобождено:"+savedBytes+"bytes");
+    }
+
+    public void showDirsWithDoubles(){
+        for (Map.Entry<String,FileElement> file: files.entrySet()) {
+            if( file.getValue().getDoubles() > 1) {
+                for (Path path : file.getValue().getPaths()) {
+//                    DirElement dirElement = new DirElement(path.toString(), file.getValue().getSize());
+                    String dir = path.getParent().toString();
+                    if (!dirs.containsKey(dir)) {
+                        dirs.put(dir, file.getValue().getSize());
+                    } else {
+                        long l = dirs.get(dir) + file.getValue().getSize();
+                        dirs.put(dir, l);
+                    }
+                }
+            }
+        }
+        dirs.entrySet().stream()
+                .sorted(Comparator.comparingLong(Map.Entry::getValue))
+//                .sorted(Comparator.comparingLong(e->e.getValue()))
+                .forEach((e)-> {
+                    String s = String.format("%,d",e.getValue());
+                    System.out.println("Size:"+s+" Dir:"+e.getKey()+";");
+                });
+
+//        System.out.println(dirs);
+
     }
 
 }
